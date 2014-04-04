@@ -22,7 +22,7 @@ class EnemyShip(Sprite):
 		
 		#load the image for the ship
                 for i in range(1,5):
-                        self.curImage = pygame.image.load("ORgateShipRevision" + str(i) + ".png")
+                        self.curImage = pygame.image.load("enemyNORGateShip" + str(i) + ".png")
                         self.curImage = pygame.transform.scale(self.curImage, (33, 49))
 			self.curImage = pygame.transform.rotate(self.curImage, 180)
                         self.shipImages.append(self.curImage)
@@ -66,10 +66,10 @@ class EnemyShip(Sprite):
                 if self.moveCounter == 20:
                         if self.moveDirection == 0:
                                 self.moveLeft()
-				self.image = self.shipImages[1]	
+				self.image = self.shipImages[2]	
                         elif self.moveDirection == 1:
                                 self.moveRight()
-				self.image = self.shipImages[2]
+				self.image = self.shipImages[3]
 	
 	#updates the ship object state on screen
 	def update(self):

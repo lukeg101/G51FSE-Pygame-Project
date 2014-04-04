@@ -11,6 +11,7 @@ from Projectile import Projectile
 from PlayerScore import PlayerScore
 from PlayerHealth import PlayerHealth
 from PlayerLives import PlayerLives
+from EnemyProjectile import EnemyProjectile
 
 
 """main function where the game runs"""						#game will be classified after prototype
@@ -57,6 +58,7 @@ def main():
 	spriteList.add(player)
 	projectileList = pygame.sprite.Group()
 	enemyList = pygame.sprite.Group()
+	enemyProjectileList = pygame.sprite.Group()
 	
 	#demo day enemies 
 	for i in range(10):
@@ -146,6 +148,29 @@ def main():
 				projectileList.remove(projectile)
 				projectile.kill()
 				gameSuccess.play()
+
+		#enemy random fire pattern - unpredictable
+		for enemyShip in enemyList:
+
+			#each enemy will have a 1/200 chance of firing a projectile at the player
+			number = random.randrange(0, 10)
+			if (number == 5):
+				enemyProjectile = EnemyProjectile((enemyShip.rect.x, enemyShip.rect.y))
+				spriteList.add(enemyProjectile)
+				enemyProjectileList.add(enemyProjectile)
+
+		#hit detection of enemy projectiles with player
+		enemyProjectileCollideList = pygame.sprite.spritecollide(player, enemyProjectileList, True)
+
+		#reduce health if hit
+		healthBar.hit(len(enemyProjectileCollideList))
+		healthBarShadow.hit(len(enemyProjectileCollideList))
+
+		#reduce lives if health becomes zero
+		if healthBar.health <= 0:
+			playerLives.decrease()
+			healthBar.newHealth(100)
+			healthBarShadow.newHealth(100)			
 
 		#animate the wallpaper on screen
                 window.blit(backgroundImage, (0, yScaler))

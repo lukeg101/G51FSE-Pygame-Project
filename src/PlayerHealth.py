@@ -24,10 +24,14 @@ class PlayerHealth(Sprite):
         def renderText(self):
                 self.image = self.font.render("Health: %d" % self.health, True, self.colour)
 
-	#function simply removes 10 health if the player ship is hit 					#needs sorting 
-        def hit(self):
-                self.health -= 10
+	#function simply removes health if the player ship is hit 					#needs sorting 
+        def hit(self, hitValue):
+                self.health -= hitValue
                 self.renderText()
+	
+	#function sets the health of the player - used when they lose a life
+	def newHealth(self, newValue):
+		self.health = newValue
 
 	#function updates sprite state on screen 
         def update(self):
