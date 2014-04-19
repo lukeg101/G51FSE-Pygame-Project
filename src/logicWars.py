@@ -13,6 +13,7 @@ from PlayerHealth import PlayerHealth
 from PlayerLives import PlayerLives
 from EnemyProjectile import EnemyProjectile
 from LevelUpToken import PowerUp
+from TriProjectile import TriProjectile
 
 """main function where the game runs"""						#game will be classified after prototype
 def main():
@@ -23,6 +24,7 @@ def main():
 	
 	#game loop variables
         runningGame = True
+	pausedGame = False
 	levelComplete = False
 	enemiesRemaining = 0	
 
@@ -98,121 +100,131 @@ def main():
 	#game loop
 	while runningGame:
 
-		PlayerLives.decrease
-		
-		#read in events from queue
-		for event in pygame.event.get():
-			#on QUIT event, exit the game loop
-			if event.type == pygame.QUIT:
-				runningGame = False
-			#if a key is pressed, act based on library definition
-			elif event.type == pygame.KEYDOWN and event.key in key_map:
-				key_map[event.key][0]()
-			#if a key is released, act based on library definition
-			elif event.type == pygame.KEYUP and event.key in key_map:
-				key_map[event.key][1]() 
-			#if a space bar is pressed, fire the projectile
-			elif event.type == pygame.KEYDOWN:
-				keyPresses = pygame.key.get_pressed()
-				if keyPresses[K_SPACE] == 1:
-					bullet = Projectile([player.rect.x + 17, player.rect.y])
-					spriteList.add(bullet)
-        				projectileList.add(bullet)
-					projectileSound.play()
-					
-		#move the background image - yTranslation
-		if changeFrame:
-			yScaler += 1
-			changeFrame = False#moves every other frame
-		else: 
-			changeFrame = True 
-	
-		if yScaler == 1400:
-			yScaler = 0		
-	
-		#sprite collision detection between sprites and projectiles
-		for projectile in projectileList:
-
-			#form the list of collisions
-			hitList = pygame.sprite.spritecollide(projectile, enemyList, True)
+		if (not pausedGame):
 			
-			#for every collision, remove the sprite and increase player score
+			#read in events from queue
+			for event in pygame.event.get():
+				#on QUIT event, exit the game loop
+				if event.type == pygame.QUIT:
+					runningGame = False
+				#if a key is pressed, act based on library definition
+				elif event.type == pygame.KEYDOWN and event.key in key_map:
+					key_map[event.key][0]()
+				#if a key is released, act based on library definition
+				elif event.type == pygame.KEYUP and event.key in key_map:
+					key_map[event.key][1]() 
+				#if a space bar is pressed, fire the projectile
+				elif event.type == pygame.KEYDOWN:
+					keyPresses = pygame.key.get_pressed()
+					if keyPresses[K_SPACE] == 1:
+						bullet = Projectile([player.rect.x + 17, player.rect.y])
+						spriteList.add(bullet)
+        					projectileList.add(bullet)
+						projectileSound.play()
 					
-			for hits in hitList:
-				#killing enemy has a 1/11 chance of producing a power up				
-				tokenChance = random.randrange(0,2)				
-				if (tokenChance == 1):
-					levelUpToken = PowerUp(projectile.rect.center, random.randrange(1,3))
-					tokenList.add(levelUpToken)
-					spriteList.add(levelUpToken)
-
-				projectile.kill()
-				playerScore.increase()
-				playerScoreShadow.increase()
-				shipExplosion.play()
-				enemiesRemaining -= 1
+			#move the background image - yTranslation
+			if changeFrame:
+				yScaler += 1
+				changeFrame = False#moves every other frame
+			else: 
+				changeFrame = True 
+		
+			if yScaler == 1400:
+				yScaler = 0		
+		
+			#sprite collision detection between sprites and projectiles
+			for projectile in projectileList:
+	
+				#form the list of collisions
+				hitList = pygame.sprite.spritecollide(projectile, enemyList, True)
 				
-			if projectile.rect.y == 0:
-				projectileList.remove(projectile)
-				projectileList.remove(projectile)
-				projectile.kill()
+				#for every collision, remove the sprite and increase player score
+						
+				for hits in hitList:
+					#killing enemy has a 1/11 chance of producing a power up				
+					tokenChance = random.randrange(0,1)				
+					if (tokenChance == 0):
+						levelUpToken = PowerUp(projectile.rect.center, random.randrange(1,4))
+						tokenList.add(levelUpToken)
+						spriteList.add(levelUpToken)
+	
+					projectile.kill()
+					playerScore.increase()
+					playerScoreShadow.increase()
+					shipExplosion.play()
+					enemiesRemaining -= 1
+					
+				if projectile.rect.y == 0:
+					projectileList.remove(projectile)
+					projectileList.remove(projectile)
+					projectile.kill()
+					gameSuccess.play()
+	
+			#enemy random fire pattern - unpredictable
+			for enemyShip in enemyList:
+	
+				#each enemy will have a 1/200 chance of firing a projectile at the player
+				number = random.randrange(0, 200)
+				if (number == 5):
+					enemyProjectile = EnemyProjectile((enemyShip.rect.x, enemyShip.rect.y))
+					spriteList.add(enemyProjectile)
+					enemyProjectileList.add(enemyProjectile)
+	
+			#hit detection of enemy projectiles with player
+			enemyProjectileCollideList = pygame.sprite.spritecollide(player, enemyProjectileList, True)
+	
+			#reduce health if hit
+			healthBar.hit(len(enemyProjectileCollideList))
+			healthBarShadow.hit(len(enemyProjectileCollideList))
+	
+			#hit detection of tokens with player ship
+			tokenCollideList = pygame.sprite.spritecollide(player, tokenList, True)
+	
+			for token in tokenCollideList:		
+					
+				#each token in the token list will grant the player a bonus
+				#increase playerLives by one
+				if (token.tokenType == 1):
+					playerLives.increase()
+					playerLivesShadow.increase()
+				#increase playerHealth by 50
+				elif (token.tokenType == 2):
+					healthBar.increaseHealth(50)
+					healthBarShadow.increaseHealth(50)
+				#spawn 3 projectiles that travel in 3 directions		
+				elif (token.tokenType == 3):
+					projectile = TriProjectile((player.rect.x, player.rect.y), 0)
+					projectile1 = TriProjectile((player.rect.x, player.rect.y), 1)
+					projectile2 = TriProjectile((player.rect.x, player.rect.y), 2)
+					projectileList.add(projectile)
+					projectileList.add(projectile1)
+					projectileList.add(projectile2)
+					spriteList.add(projectile)
+					spriteList.add(projectile1)
+					spriteList.add(projectile2)
+	
+			#reduce lives if health becomes zero
+			if healthBar.health <= 0:
+				playerLives.decrease()
+				healthBar.newHealth(100)
+				healthBarShadow.newHealth(100)			
+	
+			#animate the wallpaper on screen
+	                window.blit(backgroundImage, (0, yScaler))
+	                window.blit(backgroundImage, (0,yScaler - 1400))
+			
+			#game finished upon success
+			if enemiesRemaining == 0 and not levelComplete:
 				gameSuccess.play()
-
-		#enemy random fire pattern - unpredictable
-		for enemyShip in enemyList:
-
-			#each enemy will have a 1/200 chance of firing a projectile at the player
-			number = random.randrange(0, 200)
-			if (number == 5):
-				enemyProjectile = EnemyProjectile((enemyShip.rect.x, enemyShip.rect.y))
-				spriteList.add(enemyProjectile)
-				enemyProjectileList.add(enemyProjectile)
-
-		#hit detection of enemy projectiles with player
-		enemyProjectileCollideList = pygame.sprite.spritecollide(player, enemyProjectileList, True)
-
-		#reduce health if hit
-		healthBar.hit(len(enemyProjectileCollideList))
-		healthBarShadow.hit(len(enemyProjectileCollideList))
-
-		#hit detection of tokens with player ship
-		tokenCollideList = pygame.sprite.spritecollide(player, tokenList, True)
-
-		for token in tokenCollideList:		
-				
-			#each token in the token list will grant the player a bonus
-			#increase playerLives by one
-			if (token.tokenType == 1):
-				playerLives.increase()
-				playerLivesShadow.increase()
-			#increase playerHealth by 50
-			elif (token.tokenType == 2):
-				healthBar.increaseHealth(50)
-				healthBarShadow.increaseHealth(50)		
+				levelComplete = True
+		
+			#animate the sprites
+			spriteList.update()
+	                spriteList.draw(window)
+		        pygame.display.flip()
+			spriteList.clear(window, screen)
 			
-
-		#reduce lives if health becomes zero
-		if healthBar.health <= 0:
-			playerLives.decrease()
-			healthBar.newHealth(100)
-			healthBarShadow.newHealth(100)			
-
-		#animate the wallpaper on screen
-                window.blit(backgroundImage, (0, yScaler))
-                window.blit(backgroundImage, (0,yScaler - 1400))
-		
-		#game finished upon success
-		if enemiesRemaining == 0 and not levelComplete:
-			gameSuccess.play()
-			levelComplete = True
-	
-		#animate the sprites
-		spriteList.update()
-                spriteList.draw(window)
-	        pygame.display.flip()
-		spriteList.clear(window, screen)
-		
-		gameClock.tick(120)	
+			gameClock.tick(120)	
 
 #makes the game script run the main function
 if __name__ == "__main__":
