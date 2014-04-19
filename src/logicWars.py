@@ -12,7 +12,7 @@ from PlayerScore import PlayerScore
 from PlayerHealth import PlayerHealth
 from PlayerLives import PlayerLives
 from EnemyProjectile import EnemyProjectile
-
+from LevelUpToken import PowerUp
 
 """main function where the game runs"""						#game will be classified after prototype
 def main():
@@ -59,7 +59,8 @@ def main():
 	projectileList = pygame.sprite.Group()
 	enemyList = pygame.sprite.Group()
 	enemyProjectileList = pygame.sprite.Group()
-	
+	tokenList = pygame.sprite.Group()	
+
 	#demo day enemies 
 	for i in range(10):
 		enemy = EnemyShip((random.randrange(0, 350), random.randrange(0, 350)))
@@ -135,14 +136,22 @@ def main():
 			#form the list of collisions
 			hitList = pygame.sprite.spritecollide(projectile, enemyList, True)
 			
-			#for every collision, remove the sprite and increase player score			
+			#for every collision, remove the sprite and increase player score
+					
 			for hits in hitList:
+				#killing enemy has a 1/11 chance of producing a power up				
+				tokenChance = random.randrange(0,2)				
+				if (tokenChance == 1):
+					levelUpToken = PowerUp(projectile.rect.center, random.randrange(1,3))
+					tokenList.add(levelUpToken)
+					spriteList.add(levelUpToken)
+
 				projectile.kill()
 				playerScore.increase()
 				playerScoreShadow.increase()
 				shipExplosion.play()
 				enemiesRemaining -= 1
-
+				
 			if projectile.rect.y == 0:
 				projectileList.remove(projectile)
 				projectileList.remove(projectile)
@@ -153,7 +162,7 @@ def main():
 		for enemyShip in enemyList:
 
 			#each enemy will have a 1/200 chance of firing a projectile at the player
-			number = random.randrange(0, 10)
+			number = random.randrange(0, 200)
 			if (number == 5):
 				enemyProjectile = EnemyProjectile((enemyShip.rect.x, enemyShip.rect.y))
 				spriteList.add(enemyProjectile)
@@ -165,6 +174,22 @@ def main():
 		#reduce health if hit
 		healthBar.hit(len(enemyProjectileCollideList))
 		healthBarShadow.hit(len(enemyProjectileCollideList))
+
+		#hit detection of tokens with player ship
+		tokenCollideList = pygame.sprite.spritecollide(player, tokenList, True)
+
+		for token in tokenCollideList:		
+				
+			#each token in the token list will grant the player a bonus
+			#increase playerLives by one
+			if (token.tokenType == 1):
+				playerLives.increase()
+				playerLivesShadow.increase()
+			#increase playerHealth by 50
+			elif (token.tokenType == 2):
+				healthBar.increaseHealth(50)
+				healthBarShadow.increaseHealth(50)		
+			
 
 		#reduce lives if health becomes zero
 		if healthBar.health <= 0:

@@ -27,7 +27,12 @@ class PlayerLives(Sprite):
 	def decrease(self):
 	        self.lives -= 1
 	        self.renderText()
-	
+
+	#methof to increase player lives	
+	def increase(self):
+		self.lives += 1
+		self.renderText()
+
 	#method to update the state of the object on screen
 	def update(self):
 		self.renderText()

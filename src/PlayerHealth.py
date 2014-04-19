@@ -28,6 +28,11 @@ class PlayerHealth(Sprite):
         def hit(self, hitValue):
                 self.health -= hitValue
                 self.renderText()
+
+	#function increases player health
+	def increaseHealth(self, healthValue):
+		self.health += healthValue
+		self.renderText()
 	
 	#function sets the health of the player - used when they lose a life
 	def newHealth(self, newValue):
