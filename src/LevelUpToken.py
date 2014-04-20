@@ -18,7 +18,7 @@ class PowerUp(Sprite):
                 #load the image for the Token
 		
 		#need to create image
-		self.bulletImage = pygame.image.load("ANDgateShipRevision1.png")
+		self.bulletImage = pygame.image.load("PowerUp" + str(powerUpType) + ".png")
                 self.bulletImage = pygame.transform.scale(self.bulletImage, (20, 20))
 		self.image = self.bulletImage
 
