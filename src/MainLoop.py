@@ -29,6 +29,8 @@ class MainLoop():
 	        self.runningGame = True
 		self.pausedGame = False
 		self.levelComplete = False
+		self.inMainMenu = True
+		self.inControlMenu = False
 		self.enemiesRemaining = 0	
 	
 		#create and define the screen window
@@ -52,7 +54,19 @@ class MainLoop():
 		self.playerLives = PlayerLives("white", (350,585), self.player.lives) 			
 		self.pauseText1 = PauseGameText("white", "PAUSED", 36, (200,200))
 		self.pauseText2 = PauseGameText("white", "press 'p' to return", 26, (200, 250))	
+		self.mainMenuText1 = PauseGameText("white", "Logic Wars", 36, (200, 200))
+		self.mainMenuText2 = PauseGameText("white", "Press SPACE to Start!", 26, (200, 250))
+		self.mainMenuText3 = PauseGameText("white", "Press 'c' to see the controls", 26, (200, 300))
+		self.controlMenuText1 = PauseGameText("white", "SHIP CONTROLS", 36, (200, 200))
+		self.controlMenuText2 = PauseGameText("white", "w,a,s,d for ship movement", 26, (200, 250))
+		self.controlMenuText3 = PauseGameText("white", "arrow keys for ship movement", 26, (200, 300))
+		self.controlMenuText4 = PauseGameText("white", "SPACE to fire", 26, (200, 350))
+		self.controlMenuText5 = PauseGameText("white", "p to pause the game", 26, (200, 400))
+		self.controlMenuText6 = PauseGameText("white", "press c to return to menu ", 26, (200, 500))
+		self.controlMenuText7 = PauseGameText("white", "or SPACE to start game", 26, (200, 520))
 
+		
+		
 		#create the sprite groups to which the respective sprites belong
 		self.spriteList = pygame.sprite.LayeredUpdates()
 		self.spriteList.add(self.playerScoreShadow)
@@ -71,6 +85,21 @@ class MainLoop():
 		self.pauseMenuItems.add(self.pauseText1)
 		self.pauseMenuItems.add(self.pauseText2)
 
+		self.mainMenuItems = pygame.sprite.Group()
+		self.mainMenuItems.add(self.mainMenuText1)
+		self.mainMenuItems.add(self.mainMenuText2)
+		self.mainMenuItems.add(self.mainMenuText3)
+
+		self.controlMenuItems = pygame.sprite.Group()
+		self.controlMenuItems.add(self.controlMenuText1)
+		self.controlMenuItems.add(self.controlMenuText2)
+		self.controlMenuItems.add(self.controlMenuText3)
+		self.controlMenuItems.add(self.controlMenuText4)
+		self.controlMenuItems.add(self.controlMenuText5)
+		self.controlMenuItems.add(self.controlMenuText6)
+		self.controlMenuItems.add(self.controlMenuText7)
+		
+
 		#define game sounds and music		
 		self.projectileSound = pygame.mixer.Sound("laser shot.wav")
 		self.shipExplosion = pygame.mixer.Sound("ship explosion.wav")
@@ -78,7 +107,8 @@ class MainLoop():
 		self.music = pygame.mixer.music.load("01_Make_It_Bun_Dem.wav")
 		pygame.mixer.music.play()
 	
-		#control mapping for player
+
+		#control mapping for player in game
 		self.key_map = {
 			pygame.K_w: [self.player.keyUp, self.player.keyDown],
 			pygame.K_s: [self.player.keyDown, self.player.keyUp],
@@ -105,37 +135,98 @@ class MainLoop():
 		pygame.display.update()
 		pygame.display.flip()
 
+	def mainMenu(self):
+		self.spriteList.clear(self.window, self.screen)
+		self.window.fill(pygame.Color("black"))
+		self.mainMenuItems.update()	
+		self.mainMenuItems.draw(self.window)
+		pygame.display.flip()
+
+	def startGame(self):
+		self.inMainMenu = not self.inMainMenu
+
+	def controlMenu(self):
+		self.spriteList.clear(self.window, self.screen)
+		self.window.fill(pygame.Color("black"))
+		self.controlMenuItems.update()	
+		self.controlMenuItems.draw(self.window)
+		pygame.display.flip()
+
+	def controlsEvent(self):
+		self.inControlMenu = not self.inControlMenu
+
+	def pauseMenu(self):
+		pygame.display.flip()
+		self.spriteList.clear(self.window, self.screen)
+		self.window.fill(pygame.Color("black"))
+		self.pauseMenuItems.update()
+		self.pauseMenuItems.draw(self.window)
+		pygame.display.flip()
+
+	def readMainMenuControls(self):
+		#read in events from queue - MAIN MENU CONTROLS
+		for event in pygame.event.get():
+			#on QUIT event, exit the game loop
+			if event.type == pygame.QUIT:
+				self.runningGame = False
+				#a key is pressed - check the mapping
+			elif event.type == pygame.KEYDOWN:
+				self.keyPresses = pygame.key.get_pressed()
+				if self.keyPresses[K_SPACE] == 1:
+					self.startGame()
+				elif self.keyPresses[K_c] == 1:
+					self.controlsEvent()
+
+	def readGameControls(self):
+		#read in events from queue - IN GAME CONTROLS
+		for event in pygame.event.get():
+			#on QUIT event, exit the game loop
+			if event.type == pygame.QUIT:
+				self.runningGame = False
+			#if a key is pressed, act based on library definition
+			elif event.type == pygame.KEYDOWN and event.key in self.key_map:
+				self.key_map[event.key][0]()
+			#if a key is released, act based on library definition
+			elif event.type == pygame.KEYUP and event.key in self.key_map:
+				self.key_map[event.key][1]() 
+			#if a space bar is pressed, fire the projectile
+			#if p is pressed, pause the game
+			elif event.type == pygame.KEYDOWN:
+				self.keyPresses = pygame.key.get_pressed()
+				#if a space bar is pressed, fire the projectile
+				if self.keyPresses[K_SPACE] == 1:
+					self.bullet = Projectile([self.player.rect.x + 17, self.player.rect.y])
+					self.spriteList.add(self.bullet)
+        				self.projectileList.add(self.bullet)
+					self.projectileSound.play()
+				#if p is pressed, pause the game
+				elif self.keyPresses[K_p] == 1:
+					self.pausedGame = not self.pausedGame
+
 	def gameLoop(self):
 		#game loop
 		while self.runningGame:
 			
-			#read in events from queue
-			for event in pygame.event.get():
-				#on QUIT event, exit the game loop
-				if event.type == pygame.QUIT:
-					self.runningGame = False
-				#if a key is pressed, act based on library definition
-				elif event.type == pygame.KEYDOWN and event.key in self.key_map:
-					self.key_map[event.key][0]()
-				#if a key is released, act based on library definition
-				elif event.type == pygame.KEYUP and event.key in self.key_map:
-					self.key_map[event.key][1]() 
-				#if a space bar is pressed, fire the projectile
-				#if p is pressed, pause the game
-				elif event.type == pygame.KEYDOWN:
-					self.keyPresses = pygame.key.get_pressed()
-					#if a space bar is pressed, fire the projectile
-					if self.keyPresses[K_SPACE] == 1:
-						self.bullet = Projectile([self.player.rect.x + 17, self.player.rect.y])
-						self.spriteList.add(self.bullet)
-        					self.projectileList.add(self.bullet)
-						self.projectileSound.play()
-					#if p is pressed, pause the game
-					elif self.keyPresses[K_p] == 1:
-						self.pausedGame = not self.pausedGame
+			#if the game is in the main menu
+			if self.inMainMenu:
+			
+				#display main menu or controls menu
+				#controls menu access from main menu
+				if self.inControlMenu:
+					self.controlMenu()
+				else:				
+					self.mainMenu()
+				
+				#read in the controls for the start menu
+				self.readMainMenuControls()
+			
+			#if the game is in progress				
+			else:
+				#read controls for the player ship instead
+				self.readGameControls()				
 
 			#whilst the game is not paused
-			if (not self.pausedGame):
+			if (not self.pausedGame and not self.inMainMenu):
 				
 				#move the background image - yTranslation
 				if self.changeFrame:
@@ -240,11 +331,6 @@ class MainLoop():
 				self.spriteList.clear(self.window, self.screen)
 				
 				self.gameClock.tick(120)	
-			else:
-				pygame.display.flip()
-				self.spriteList.clear(self.window, self.screen)
-				self.window.fill(pygame.Color("black"))
-				self.pauseMenuItems.update()
-				self.pauseMenuItems.draw(self.window)
-				pygame.display.flip()
+			elif not self.inMainMenu:
+				self.pauseMenu()
 	
