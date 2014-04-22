@@ -8,7 +8,7 @@ class EnemyShip(Sprite):
 #need different classes of ships and enemy mothership
 
 	#default constructor - initisalises ship object on creation
-	def __init__(self, spawnCoords):
+	def __init__(self, spawnCoords, enemyShipType):
 		pygame.sprite.Sprite.__init__(self)
 		
 		#set the initial image state and ship x/y Coords 
@@ -17,6 +17,7 @@ class EnemyShip(Sprite):
 		self.yCoord = 0
 		self.moveCounter = 0
 		self.moveDirection = 0 #0 is left, 1 is right
+		self.shipType = enemyShipType #determines the way in which the ship moves downscreen
 		#load the image for the ship
 		#image, ship health will change with classification
 		
@@ -52,24 +53,28 @@ class EnemyShip(Sprite):
 	def moveSprite(self):
 		self.moveCounter += 1
 
-                if self.rect.left == 0:
-                        self.moveDirection = 1
-                        self.moveRight()
-                        self.rect.y += 10
-                        self.moveCounter = 0
-                elif self.rect.left == 367:
-                        self.moveDirection = 0
-                        self.moveLeft()
-                        self.rect.y += 10
-                        self.moveCounter = 0
+		if self.shipType == 0:
+		        if self.rect.left == 0:
+		                self.moveDirection = 1
+		                self.moveRight()
+		                self.rect.y += 10
+		                self.moveCounter = 0
+		        elif self.rect.left == 367:
+		                self.moveDirection = 0
+		                self.moveLeft()
+		                self.rect.y += 10
+		                self.moveCounter = 0
 			
-                if self.moveCounter == 20:
-                        if self.moveDirection == 0:
-                                self.moveLeft()
-				self.image = self.shipImages[2]	
-                        elif self.moveDirection == 1:
-                                self.moveRight()
-				self.image = self.shipImages[3]
+		        if self.moveCounter == 20:
+		                if self.moveDirection == 0:
+		                        self.moveLeft()
+					self.image = self.shipImages[2]	
+		                elif self.moveDirection == 1:
+		                        self.moveRight()
+					self.image = self.shipImages[3]
+		elif self.shipType == 1:
+			self.rect.y += 1
+			self.image = self.shipImages[1]
 	
 	#updates the ship object state on screen
 	def update(self):
@@ -79,7 +84,7 @@ class EnemyShip(Sprite):
 		
 		#define the boundaries in which the game can move
 		self.rect.top = max(-200, self.rect.top)
-		self.rect.bottom = min(600, self.rect.bottom)
+		self.rect.bottom = min(750, self.rect.bottom)
 		self.rect.left = min(367, self.rect.left)
 		self.rect.right = max(33, self.rect.right)
 

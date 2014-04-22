@@ -196,7 +196,7 @@ class MainLoop():
 				self.runningGame = False
 			elif event.type == pygame.KEYDOWN:
 				self.keyPresses = pygame.key.get_pressed()
-				if self.keyPresses[K_SPACE] == 1:
+				if self.keyPresses[K_RETURN] == 1:
 					self.spriteList.empty()
 					self.__init__()
 
@@ -229,7 +229,8 @@ class MainLoop():
 	def spawnEnemies(self):
 		#spawn 20 enemies above the screen frame
 		for i in range(20):
-			self.enemy = EnemyShip((random.randrange(0, 350), random.randrange(-100, -33)))
+			self.enemyShipType = random.randrange(0, 2)
+			self.enemy = EnemyShip((random.randrange(0, 350, 50), random.randrange(-100, -33, 40)), self.enemyShipType)
 			self.spriteList.add(self.enemy)
 			self.enemyList.add(self.enemy)
 			self.enemiesRemaining += 1
@@ -315,9 +316,9 @@ class MainLoop():
 				for enemyShip in self.enemyList:
 		
 					#if they reach the bottom of the map - remove enemy
-					if enemyShip.rect.y <= -650:
+					if enemyShip.rect.y >= 700:
 						enemyShip.kill()
-						enemiesRemaining -= 1
+						self.enemiesRemaining -= 1
 
 					#each enemy will have a 1/200 chance of firing a projectile at the player
 					self.number = random.randrange(0, 200)
