@@ -68,6 +68,7 @@ class MainLoop():
 		self.controlMenuText7 = PauseGameText("white", "or SPACE to start game", 26, (200, 520))
 		self.gameOverText1 = PauseGameText("white", "GAME OVER", 36, (200, 200))
 		self.gameOverText2 = PauseGameText("white", "you lost the game", 26, (200, 400))
+		self.gameOverText3 = PauseGameText("white", "press ENTER to retry", 26, (200, 420))
 		
 		#create the sprite groups to which the respective sprites belong
 		self.spriteList = pygame.sprite.LayeredUpdates()
@@ -104,6 +105,7 @@ class MainLoop():
 		self.gameOverMenuItems = pygame.sprite.Group()
 		self.gameOverMenuItems.add(self.gameOverText1)
 		self.gameOverMenuItems.add(self.gameOverText2)
+		self.gameOverMenuItems.add(self.gameOverText3)
 		
 
 		#define game sounds and music		
@@ -299,10 +301,10 @@ class MainLoop():
 						projectile.kill()
 
 					for hits in self.hitList:
-						#killing enemy has a 1/11 chance of producing a power up				
-						self.tokenChance = random.randrange(0,11)				
+						#killing enemy has a 1/20 chance of producing a power up				
+						self.tokenChance = random.randrange(0,20)				
 						if (self.tokenChance == 0):
-							self.levelUpToken = PowerUp(projectile.rect.center, random.randrange(1,5))
+							self.levelUpToken = PowerUp(projectile.rect.center, random.randrange(1,6))
 							self.tokenList.add(self.levelUpToken)
 							self.spriteList.add(self.levelUpToken)
 		
@@ -382,6 +384,11 @@ class MainLoop():
 						self.shield = Shield((self.player.rect.x + 15, self.player.rect.y - 2))
 						self.spriteList.add(self.shield)
 						self.hasShield = True	
+					#drops a bomb that destroys all enemy ships
+					elif (token.tokenType == 5):
+						self.enemiesRemaining = 0
+						for enemy in self.enemyList:
+							enemy.remove([self.spriteList, self.enemyList])
 		
 				#animate the wallpaper on screen
 	        	        self.window.blit(self.backgroundImage, (0, self.yScaler))
