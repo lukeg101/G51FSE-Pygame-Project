@@ -17,7 +17,7 @@ class PlayerShip(Sprite):
 		self.xCoord = 0
 		self.yCoord = 0						#ship classification will change ship image 
 		self.health=100
-		self.lives=4
+		self.lives=2
 
 		#load the image for the ship
 		for i in range(1,5):
@@ -51,11 +51,17 @@ class PlayerShip(Sprite):
 
 		#if damage dealt is < current health: reduce current health
 		if damageVal < self.health:
-			self.health - damageVal
+			self.health -= damageVal
 		#else reduce lives and reset health counter
 		else:
 			self.lives -= 1
 			self.health = 100
+
+	def addHealth(self, newHealth):
+		self.health += newHealth
+
+	def addLives(self, newLives):
+		self.lives += newLives
 
 	#updates sprite state on screen - x/y coordinates
 	def update(self):

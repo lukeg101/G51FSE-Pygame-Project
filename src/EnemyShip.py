@@ -55,12 +55,12 @@ class EnemyShip(Sprite):
                 if self.rect.left == 0:
                         self.moveDirection = 1
                         self.moveRight()
-                        self.rect.y += 5
+                        self.rect.y += 10
                         self.moveCounter = 0
                 elif self.rect.left == 367:
                         self.moveDirection = 0
                         self.moveLeft()
-                        self.rect.y += 5
+                        self.rect.y += 10
                         self.moveCounter = 0
 			
                 if self.moveCounter == 20:
@@ -78,7 +78,7 @@ class EnemyShip(Sprite):
 		self.rect.move_ip(self.xCoord, self.yCoord)
 		
 		#define the boundaries in which the game can move
-		self.rect.top = max(0, self.rect.top)
+		self.rect.top = max(-200, self.rect.top)
 		self.rect.bottom = min(600, self.rect.bottom)
 		self.rect.left = min(367, self.rect.left)
 		self.rect.right = max(33, self.rect.right)

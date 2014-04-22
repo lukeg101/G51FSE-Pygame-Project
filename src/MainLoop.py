@@ -13,6 +13,7 @@ from EnemyProjectile import EnemyProjectile
 from LevelUpToken import PowerUp
 from TriProjectile import TriProjectile
 from PauseGameText import PauseGameText
+from Shield import Shield
 
 """class that runs the game loop"""
 class MainLoop():
@@ -28,10 +29,11 @@ class MainLoop():
 		#game loop variables
 	        self.runningGame = True
 		self.pausedGame = False
-		self.levelComplete = False
 		self.inMainMenu = True
 		self.inControlMenu = False
 		self.enemiesRemaining = 0	
+		self.hasShield = False
+		self.gameOver = False
 	
 		#create and define the screen window
 		self.screenHeight, self.screenWidth = 600, 400
@@ -64,8 +66,8 @@ class MainLoop():
 		self.controlMenuText5 = PauseGameText("white", "p to pause the game", 26, (200, 400))
 		self.controlMenuText6 = PauseGameText("white", "press c to return to menu ", 26, (200, 500))
 		self.controlMenuText7 = PauseGameText("white", "or SPACE to start game", 26, (200, 520))
-
-		
+		self.gameOverText1 = PauseGameText("white", "GAME OVER", 36, (200, 200))
+		self.gameOverText2 = PauseGameText("white", "you lost the game", 26, (200, 400))
 		
 		#create the sprite groups to which the respective sprites belong
 		self.spriteList = pygame.sprite.LayeredUpdates()
@@ -98,6 +100,10 @@ class MainLoop():
 		self.controlMenuItems.add(self.controlMenuText5)
 		self.controlMenuItems.add(self.controlMenuText6)
 		self.controlMenuItems.add(self.controlMenuText7)
+
+		self.gameOverMenuItems = pygame.sprite.Group()
+		self.gameOverMenuItems.add(self.gameOverText1)
+		self.gameOverMenuItems.add(self.gameOverText2)
 		
 
 		#define game sounds and music		
@@ -124,12 +130,7 @@ class MainLoop():
 		self.gameClock = pygame.time.Clock()
 		self.gameClock.tick(30)
 
-		#demo day enemies 
-		for i in range(10):
-			self.enemy = EnemyShip((random.randrange(0, 350), random.randrange(0, 350)))
-			self.spriteList.add(self.enemy)
-			self.enemyList.add(self.enemy)
-			self.enemiesRemaining += 1
+		self.spawnEnemies()
 	
 		# draw and display on screen
 		pygame.display.update()
@@ -156,11 +157,18 @@ class MainLoop():
 		self.inControlMenu = not self.inControlMenu
 
 	def pauseMenu(self):
-		pygame.display.flip()
 		self.spriteList.clear(self.window, self.screen)
 		self.window.fill(pygame.Color("black"))
 		self.pauseMenuItems.update()
 		self.pauseMenuItems.draw(self.window)
+		pygame.display.flip()
+
+	def gameOverMenu(self):
+		pygame.display.flip()
+		self.spriteList.clear(self.window, self.screen)
+		self.window.fill(pygame.Color("black"))
+		self.gameOverMenuItems.update()
+		self.gameOverMenuItems.draw(self.window)
 		pygame.display.flip()
 
 	def readMainMenuControls(self):
@@ -176,6 +184,21 @@ class MainLoop():
 					self.startGame()
 				elif self.keyPresses[K_c] == 1:
 					self.controlsEvent()
+				#if p is pressed, pause the game
+				elif self.keyPresses[K_p] == 1:
+					self.pausedGame = not self.pausedGame
+
+	def readGameOverControls(self):
+		#read in events from queue - MAIN MENU CONTROLS
+		for event in pygame.event.get():
+			#on QUIT event, exit the game loop
+			if event.type == pygame.QUIT:
+				self.runningGame = False
+			elif event.type == pygame.KEYDOWN:
+				self.keyPresses = pygame.key.get_pressed()
+				if self.keyPresses[K_SPACE] == 1:
+					self.spriteList.empty()
+					self.__init__()
 
 	def readGameControls(self):
 		#read in events from queue - IN GAME CONTROLS
@@ -203,31 +226,57 @@ class MainLoop():
 				elif self.keyPresses[K_p] == 1:
 					self.pausedGame = not self.pausedGame
 
+	def spawnEnemies(self):
+		#spawn 20 enemies above the screen frame
+		for i in range(20):
+			self.enemy = EnemyShip((random.randrange(0, 350), random.randrange(-100, -33)))
+			self.spriteList.add(self.enemy)
+			self.enemyList.add(self.enemy)
+			self.enemiesRemaining += 1
+
 	def gameLoop(self):
 		#game loop
 		while self.runningGame:
 			
 			#if the game is in the main menu
-			if self.inMainMenu:
-			
-				#display main menu or controls menu
+			if self.inMainMenu:	
+	
+				#read in the controls for the start menu
+				self.readMainMenuControls()
+
 				#controls menu access from main menu
 				if self.inControlMenu:
 					self.controlMenu()
 				else:				
 					self.mainMenu()
-				
-				#read in the controls for the start menu
-				self.readMainMenuControls()
 			
-			#if the game is in progress				
-			else:
-				#read controls for the player ship instead
-				self.readGameControls()				
+			#if the game is paused
+			elif self.pausedGame:
+				self.pauseMenu()
+				self.readGameControls()
 
-			#whilst the game is not paused
-			if (not self.pausedGame and not self.inMainMenu):
-				
+			#if you lose the game - display game over screen
+			elif self.gameOver:
+				self.gameOverMenu()
+				self.readGameOverControls()			
+
+			#whilst the game is not paused or in the main menu or on the game over screen
+			if (not self.pausedGame and not self.inMainMenu and not self.gameOver):
+	
+				#read controls for the player ship
+				self.readGameControls()
+
+				if self.player.lives == -1:
+					self.gameOver = True
+
+				if (self.enemiesRemaining <= 5):
+					self.spawnEnemies()
+
+				#adjust the current coords of a shield upgrade, if the player has it
+				if self.hasShield:
+					self.shield.updateLocation((self.player.rect.x + 15, self.player.rect.y - 2))
+						
+
 				#move the background image - yTranslation
 				if self.changeFrame:
 					self.yScaler += 1
@@ -237,20 +286,22 @@ class MainLoop():
 			
 				if self.yScaler == 1400:
 					self.yScaler = 0		
-			
+
 				#sprite collision detection between sprites and projectiles
 				for projectile in self.projectileList:
 		
-					#form the list of collisions
+
+					#for every collision, remove the sprite and increase player score
 					self.hitList = pygame.sprite.spritecollide(projectile, self.enemyList, True)
 					
-					#for every collision, remove the sprite and increase player score
-							
+					if projectile.rect.y <= -20 or projectile.rect.x <= -10 or projectile.rect.x >= 400:
+						projectile.kill()
+
 					for hits in self.hitList:
 						#killing enemy has a 1/11 chance of producing a power up				
-						self.tokenChance = random.randrange(0,1)				
+						self.tokenChance = random.randrange(0,11)				
 						if (self.tokenChance == 0):
-							self.levelUpToken = PowerUp(projectile.rect.center, random.randrange(1,4))
+							self.levelUpToken = PowerUp(projectile.rect.center, random.randrange(1,5))
 							self.tokenList.add(self.levelUpToken)
 							self.spriteList.add(self.levelUpToken)
 		
@@ -259,16 +310,15 @@ class MainLoop():
 						self.playerScoreShadow.increase()
 						self.shipExplosion.play()
 						self.enemiesRemaining -= 1
-						
-					if projectile.rect.y == 0:
-						self.projectileList.remove(projectile)
-						self.projectileList.remove(projectile)
-						projectile.kill()
-						self.gameSuccess.play()
 		
 				#enemy random fire pattern - unpredictable
 				for enemyShip in self.enemyList:
 		
+					#if they reach the bottom of the map - remove enemy
+					if enemyShip.rect.y <= -650:
+						enemyShip.kill()
+						enemiesRemaining -= 1
+
 					#each enemy will have a 1/200 chance of firing a projectile at the player
 					self.number = random.randrange(0, 200)
 					if (self.number == 5):
@@ -278,25 +328,43 @@ class MainLoop():
 		
 				#hit detection of enemy projectiles with player
 				self.enemyProjectileCollideList = pygame.sprite.spritecollide(self.player, self.enemyProjectileList, True)
-		
+				
 				#reduce health if hit
-				self.healthBar.hit(len(self.enemyProjectileCollideList))
-				self.healthBarShadow.hit(len(self.enemyProjectileCollideList))
+				self.player.takeHit(5 * len(self.enemyProjectileCollideList))
+				self.healthBar.newHealth(self.player.health)
+				self.healthBarShadow.newHealth(self.player.health)
+				self.playerLives.newLives(self.player.lives)
+				self.playerLivesShadow.newLives(self.player.lives)
+
+				#collision of enemy projectiles and shields 
+				for enemyProjectile in self.enemyProjectileList:
+
+					#if projectile goes out of range remove it
+					if enemyProjectile.rect.y >= 610:
+						enemyProjectile.kill()
+					
+					#remove shield if it is hit by a projectile
+					if self.hasShield and pygame.sprite.collide_rect(self.shield, enemyProjectile):
+						enemyProjectile.kill()
+						self.shield.kill()
+						self.hasShield = not self.hasShield 
 		
 				#hit detection of tokens with player ship
 				self.tokenCollideList = pygame.sprite.spritecollide(self.player, self.tokenList, True)
 		
 				for token in self.tokenCollideList:		
-						
+					
+					self.gameSuccess.play()						
+
 					#each token in the token list will grant the player a bonus
 					#increase playerLives by one
 					if (token.tokenType == 1):
-						self.playerLives.increase()
-						self.playerLivesShadow.increase()
-					#increase playerHealth by 50
+						self.player.addLives(1)
+						self.playerLives.newLives(self.player.lives)
+						self.playerLivesShadow.newLives(self.player.lives)
+					#increase playerHealth by 20
 					elif (token.tokenType == 2):
-						self.healthBar.increaseHealth(50)
-						self.healthBarShadow.increaseHealth(50)
+						self.player.addHealth(20)
 					#spawn 3 projectiles that travel in 3 directions		
 					elif (token.tokenType == 3):
 						projectile = TriProjectile((self.player.rect.x, self.player.rect.y), 0)
@@ -308,21 +376,15 @@ class MainLoop():
 						self.spriteList.add(projectile)
 						self.spriteList.add(projectile1)
 						self.spriteList.add(projectile2)
-		
-				#reduce lives if health becomes zero
-				if self.healthBar.health <= 0:
-					self.playerLives.decrease()
-					self.healthBar.newHealth(100)
-					self.healthBarShadow.newHealth(100)			
+					#spawns a shield for the player
+					elif (token.tokenType == 4 and not self.hasShield):
+						self.shield = Shield((self.player.rect.x + 15, self.player.rect.y - 2))
+						self.spriteList.add(self.shield)
+						self.hasShield = True	
 		
 				#animate the wallpaper on screen
 	        	        self.window.blit(self.backgroundImage, (0, self.yScaler))
 	        	        self.window.blit(self.backgroundImage, (0,self.yScaler - 1400))
-				
-				#game finished upon success
-				if self.enemiesRemaining == 0 and not self.levelComplete:
-					self.gameSuccess.play()
-					self.levelComplete = True
 			
 				#animate the sprites
 				self.spriteList.update()
@@ -331,6 +393,3 @@ class MainLoop():
 				self.spriteList.clear(self.window, self.screen)
 				
 				self.gameClock.tick(120)	
-			elif not self.inMainMenu:
-				self.pauseMenu()
-	
