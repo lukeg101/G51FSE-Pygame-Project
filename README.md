@@ -42,6 +42,7 @@ We broke down the project into the following areas:
 
 As this project was completed in an agile manner, (we also used Spiral, TDD and Extreme at different stages); many of the stages were repeated in order to fully cater for all requirements of the user.
 
+Please see 'DesignPortfolioLogicWars.pdf' for a complete report of the process, the final product and decisions along the way
 
 
 
