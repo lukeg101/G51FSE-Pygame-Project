@@ -2,7 +2,7 @@ G51FSE-Pygame-Project
 =====================
 
 This is the repo for the G51FSE pygame Project for the software engineering module in my first year of computer science at the University of Nottingham
-In this piece of coursework, I had to observe and implement and agile software engineering process whilst working with one other in pairs programming (XTreme). Our task was described as follows:
+In this piece of coursework, I chose observe and implement a software engineering process whilst working with one other in a group (we used agile XTreme with pairs programming for the implementation stages but used the iterative spiral methodology for structuring of the whole project) as follows:
 
 Overview
 ========
@@ -40,7 +40,7 @@ We broke down the project into the following areas:
 4. Testing - The code we had written had to be tested to ensure correct and proper functionality. Some of this was done as part of Test Driven Development.
 5. User Evaluation - We would approach the user at various stages of development in order to gather feedback, more requirements and refine those we already had.
 
-As this project was completed in an agile manner, (we also used Spiral, TDD and Extreme at different stages); many of the stages were repeated in order to fully cater for all requirements of the user.
+As this project was completed in an iterative manner, (we also used agile pairs programming, and Extreme at different stages); many of the stages were repeated in order to fully cater for all requirements of the user.
 
 Please see 'DesignPortfolioLogicWars.pdf' for a complete report of the process, the final product and decisions along the way
 
